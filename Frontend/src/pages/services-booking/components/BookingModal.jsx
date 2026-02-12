@@ -53,8 +53,15 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
       return;
     }
 
-    if (step === 2 && (!bookingData.patientName || !bookingData.email)) {
-      toast.error("Please fill required patient details");
+    if (
+      step === 2 &&
+      (!bookingData.patientName ||
+        !bookingData.patientAge ||
+        !bookingData.contactNumber ||
+        !bookingData.email ||
+        !bookingData.emergencyContact)
+    ) {
+      toast.error("Please fill all required patient details");
       return;
     }
 
@@ -78,13 +85,14 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
 
       visitType: bookingData.visitType,
 
-      preferredDate: bookingData.date,
+      preferredDate: new Date(bookingData.date), // ✅ FIXED
       preferredTime: bookingData.time,
+
       reasonForVisit: bookingData.symptoms,
 
       patient: {
         fullName: bookingData.patientName,
-        age: bookingData.patientAge,
+        age: Number(bookingData.patientAge),
         contactNumber: bookingData.contactNumber,
         email: bookingData.email,
         emergencyContact: bookingData.emergencyContact,
@@ -96,7 +104,7 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
         ? professional.consultationFee
         : service?.price,
 
-      termsAccepted: bookingData.agreeToTerms,
+      termsAccepted: true,
     };
 
     try {
@@ -111,7 +119,6 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
         response.data?.message || "Appointment booked successfully"
       );
 
-      // Reset state
       setBookingData({
         date: "",
         time: "",
@@ -141,10 +148,10 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-      <div className="bg-card rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-card border-b border-border p-4 flex justify-between">
-          <h2 className="text-lg font-semibold">Book Appointment</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="bg-card rounded-lg shadow-lg w-full max-w-2xl">
+        <div className="flex justify-between p-4 border-b">
+          <h2 className="font-semibold">Book Appointment</h2>
           <button onClick={onClose}>
             <Icon name="X" size={20} />
           </button>
@@ -165,11 +172,11 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
               <Input
                 label="Preferred Date"
                 type="date"
+                min={new Date().toISOString().split("T")[0]}
                 value={bookingData.date}
                 onChange={(e) =>
                   handleInputChange("date", e.target.value)
                 }
-                min={new Date().toISOString().split("T")[0]}
               />
 
               <Select
@@ -190,6 +197,37 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
                 value={bookingData.patientName}
                 onChange={(e) =>
                   handleInputChange("patientName", e.target.value)
+                }
+              />
+
+              <Input
+                label="Age"
+                type="number"
+                value={bookingData.patientAge}
+                onChange={(e) =>
+                  handleInputChange("patientAge", e.target.value)
+                }
+              />
+
+              <Input
+                label="Contact Number"
+                value={bookingData.contactNumber}
+                onChange={(e) =>
+                  handleInputChange(
+                    "contactNumber",
+                    e.target.value
+                  )
+                }
+              />
+
+              <Input
+                label="Emergency Contact"
+                value={bookingData.emergencyContact}
+                onChange={(e) =>
+                  handleInputChange(
+                    "emergencyContact",
+                    e.target.value
+                  )
                 }
               />
 
