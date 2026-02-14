@@ -1,94 +1,131 @@
-const mongoose = require("mongoose");
+const Appointment = require("../models/Appointment");
+const sendMail = require("../config/sendmail");
 
-const appointmentSchema = new mongoose.Schema(
-  {
-    //Appointment Wala
-    serviceType: {
-      type: String,
-      required: true,
-    },
+exports.bookAppointment = async (req, res) => {
+  try {
+    // 1️⃣ Basic request validation
+    if (!req.body || !req.body.patient || !req.body.patient.email) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request data",
+      });
+    }
 
-    visitType: {
-      type: String,
-      enum: ["HOME_VISIT", "TELEHEALTH", "CLINIC_VISIT"],
-      required: true,
-    },
+    // 2️⃣ Create and save appointment
+    const appointment = new Appointment(req.body);
+    await appointment.save();
 
-    preferredDate: {
-      type: Date,
-      required: true,
-    },
+    const userEmail = appointment.patient.email;
+    const adminEmail = process.env.ADMIN_EMAIL;
 
-    preferredTime: {
-      type: String, 
-      required: true,
-    },
+    // 3️⃣ Format date safely
+    const formattedDate = appointment.preferredDate
+      ? new Date(appointment.preferredDate).toDateString()
+      : "Not Provided";
 
-    reasonForVisit: {
-      type: String,
-      trim: true,
-    },
+    // 4️⃣ Safe address handling (important for TELEHEALTH / CLINIC)
+    const patientAddress =
+      appointment.patient.address || "Not Required / Not Provided";
 
-    //Patient Wala
-    patient: {
-      fullName: {
-        type: String,
-        required: true,
-        trim: true,
-      },
+    // 5️⃣ Send emails (failure here should NOT affect booking)
+    try {
+      // 📩 User confirmation email
+      await sendMail({
+        to: userEmail,
+        subject: "Appointment Confirmation | TrustHomeCare",
+        html: `
+          <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+            <h2 style="color: #0a6ebd;">TrustHomeCare</h2>
 
-      age: {
-        type: Number,
-        required: true,
-        min: 0,
-      },
+            <p>Dear <strong>${appointment.patient.fullName}</strong>,</p>
 
-      contactNumber: {
-        type: String,
-        required: true,
-      },
+            <p>Your appointment has been <strong>successfully booked</strong>.</p>
 
-     email: {
-  type: String,
-  required: true,
-  lowercase: true,
-  match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
-},
+            <table style="border-collapse: collapse; margin-top: 15px;">
+              <tr>
+                <td style="padding: 8px;"><strong>Service</strong></td>
+                <td style="padding: 8px;">${appointment.serviceType}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px;"><strong>Date</strong></td>
+                <td style="padding: 8px;">${formattedDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px;"><strong>Time</strong></td>
+                <td style="padding: 8px;">${appointment.preferredTime}</td>
+              </tr>
+            </table>
 
-      emergencyContact: {
-        type: String,
-        required: true,
-      },
+            <p style="margin-top: 20px;">
+              Thank you for choosing TrustHomeCare.
+            </p>
+          </div>
+        `,
+      });
 
-      insuranceProvider: {
-        type: String,
-      },
+      // 📩 Admin notification email
+      if (adminEmail) {
+        await sendMail({
+          to: adminEmail,
+          subject: "New Appointment Booked | TrustHomeCare",
+          html: `
+            <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+              <h2 style="color: #0a6ebd;">New Appointment Alert</h2>
 
-      specialRequirements: {
-        type: String,
-        trim: true,
-      },
-    },
+              <table style="border-collapse: collapse; margin-top: 15px;">
+                <tr>
+                  <td style="padding: 8px;"><strong>Patient Name</strong></td>
+                  <td style="padding: 8px;">${appointment.patient.fullName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px;"><strong>Contact</strong></td>
+                  <td style="padding: 8px;">${appointment.patient.contactNumber}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px;"><strong>Email</strong></td>
+                  <td style="padding: 8px;">${appointment.patient.email}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px;"><strong>Service</strong></td>
+                  <td style="padding: 8px;">${appointment.serviceType}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px;"><strong>Visit Type</strong></td>
+                  <td style="padding: 8px;">${appointment.visitType}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px;"><strong>Date</strong></td>
+                  <td style="padding: 8px;">${formattedDate}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px;"><strong>Time</strong></td>
+                  <td style="padding: 8px;">${appointment.preferredTime}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px;"><strong>Address</strong></td>
+                  <td style="padding: 8px;">${patientAddress}</td>
+                </tr>
+              </table>
+            </div>
+          `,
+        });
+      }
+    } catch (mailError) {
+      console.error("Email sending failed:", mailError.message);
+    }
 
-    consultationFee: {
-      type: Number,
-      required: true,
-    },
+    // 6️⃣ Final response
+    res.status(201).json({
+      success: true,
+      message: "Appointment booked successfully",
+      data: appointment,
+    });
+  } catch (error) {
+    console.error("Booking Error:", error);
 
-    termsAccepted: {
-      type: Boolean,
-      required: true,
-      validate: {
-        validator: (v) => v === true,
-        message: "Terms must be accepted to confirm booking",
-      },
-    },
-
-    confirmedAt: {
-      type: Date,
-    },
-  },
-  { timestamps: true }
-);
-
-module.exports = mongoose.model("Appointment", appointmentSchema);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error while booking appointment",
+    });
+  }
+};

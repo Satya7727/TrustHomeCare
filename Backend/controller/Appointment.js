@@ -55,23 +55,53 @@ exports.bookAppointment = async (req, res) => {
         `,
       });
 
-      if (adminEmail) {
-        await sendMail({
-          to: adminEmail,
-          subject: "New Appointment Booked | TrustHomeCare",
-          html: `
-            <div style="font-family: Arial, sans-serif;">
-              <h3>New Appointment Details</h3>
-              <p><strong>Patient:</strong> ${appointment.patient.fullName}</p>
-              <p><strong>Contact:</strong> ${appointment.patient.contactNumber}</p>
-              <p><strong>Email:</strong> ${appointment.patient.email}</p>
-              <p><strong>Service:</strong> ${appointment.serviceType}</p>
-              <p><strong>Date:</strong> ${formattedDate}</p>
-              <p><strong>Time:</strong> ${appointment.preferredTime}</p>
-            </div>
-          `,
-        });
-      }
+     if (adminEmail) {
+  await sendMail({
+    to: adminEmail,
+    subject: "New Appointment Booked | TrustHomeCare",
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+        <h2 style="color: #0a6ebd;">New Appointment Alert</h2>
+
+        <table style="border-collapse: collapse; margin-top: 15px;">
+          <tr>
+            <td style="padding: 8px;"><strong>Patient Name</strong></td>
+            <td style="padding: 8px;">${appointment.patient.fullName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px;"><strong>Contact</strong></td>
+            <td style="padding: 8px;">${appointment.patient.contactNumber}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px;"><strong>Email</strong></td>
+            <td style="padding: 8px;">${appointment.patient.email}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px;"><strong>Service</strong></td>
+            <td style="padding: 8px;">${appointment.serviceType}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px;"><strong>Visit Type</strong></td>
+            <td style="padding: 8px;">${appointment.visitType}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px;"><strong>Date</strong></td>
+            <td style="padding: 8px;">${formattedDate}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px;"><strong>Time</strong></td>
+            <td style="padding: 8px;">${appointment.preferredTime}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px;"><strong>Address</strong></td>
+            <td style="padding: 8px;">${appointment.patient.address}</td>
+          </tr>
+        </table>
+      </div>
+    `,
+  });
+}
+
 
     } catch (mailError) {
       console.error("Email sending failed:", mailError.message);

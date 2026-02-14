@@ -12,6 +12,7 @@ import { Checkbox } from '../../../components/ui/Checkbox';
 
 const BookingModal = ({ isOpen, onClose, service, professional }) => {
   const [step, setStep] = useState(1);
+
   const [bookingData, setBookingData] = useState({
     date: '',
     time: '',
@@ -22,10 +23,7 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
     email: '',
     address: '',
     symptoms: '',
-    insuranceProvider: '',
-    policyNumber: '',
     emergencyContact: '',
-    specialRequirements: '',
     agreeToTerms: false
   });
 
@@ -46,15 +44,6 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
     { value: '16:00', label: '4:00 PM' }
   ];
 
-  const insuranceProviders = [
-    { value: 'none', label: 'No Insurance' },
-    { value: 'medicare', label: 'Medicare' },
-    { value: 'medicaid', label: 'Medicaid' },
-    { value: 'aetna', label: 'Aetna' },
-    { value: 'cigna', label: 'Cigna' },
-    { value: 'united', label: 'UnitedHealthcare' }
-  ];
-
   const handleInputChange = (field, value) => {
     setBookingData(prev => ({ ...prev, [field]: value }));
   };
@@ -64,10 +53,14 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
 
   const handleSubmit = async () => {
     try {
+      if (!bookingData.agreeToTerms) {
+        return toast.error('Please accept terms & conditions');
+      }
+
       const payload = {
         serviceType: professional
-          ? professional?.specialization
-          : service?.name,
+          ? professional.specialization
+          : service.name,
 
         visitType:
           bookingData.visitType === 'home'
@@ -76,7 +69,7 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
             ? 'TELEHEALTH'
             : 'CLINIC_VISIT',
 
-        preferredDate: bookingData.date,
+        preferredDate: new Date(bookingData.date),
         preferredTime: bookingData.time,
 
         reasonForVisit: bookingData.symptoms,
@@ -87,15 +80,17 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
           contactNumber: bookingData.contactNumber,
           email: bookingData.email,
           emergencyContact: bookingData.emergencyContact,
-          insuranceProvider: bookingData.insuranceProvider,
-          specialRequirements: bookingData.specialRequirements,
+          address:
+            bookingData.visitType === 'home'
+              ? bookingData.address
+              : 'N/A'
         },
 
         consultationFee: professional
-          ? professional?.consultationFee
-          : service?.price,
+          ? professional.consultationFee
+          : service.price,
 
-        termsAccepted: bookingData.agreeToTerms,
+        termsAccepted: bookingData.agreeToTerms
       };
 
       await api.post('/appointment/book', payload);
@@ -115,308 +110,115 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
       <div className="bg-card rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+
+        {/* HEADER */}
         <div className="sticky top-0 bg-card border-b border-border p-4 md:p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <Icon name="Calendar" size={20} color="var(--color-primary)" />
             </div>
             <div>
-              <h2 className="text-lg md:text-xl font-semibold text-foreground font-headline">
-                Book Appointment
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Step {step} of 3
-              </p>
+              <h2 className="text-lg md:text-xl font-semibold">Book Appointment</h2>
+              <p className="text-sm text-muted-foreground">Step {step} of 3</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-md hover:bg-muted flex items-center justify-center transition-colors"
-          >
+          <button onClick={onClose}>
             <Icon name="X" size={20} />
           </button>
         </div>
 
+        {/* BODY */}
         <div className="p-4 md:p-6">
+
+          {/* STEP INDICATOR */}
           <div className="flex items-center justify-between mb-6">
-            {[1, 2, 3]?.map((stepNum) => (
-              <React.Fragment key={stepNum}>
-                <div className="flex flex-col items-center gap-2">
-                  <div
-                    className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-semibold transition-colors ${
-                      step >= stepNum
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {stepNum}
-                  </div>
-                  <span className="text-xs text-muted-foreground hidden md:block">
-                    {stepNum === 1 ? 'Details' : stepNum === 2 ? 'Patient Info' : 'Confirm'}
-                  </span>
-                </div>
-                {stepNum < 3 && (
-                  <div
-                    className={`flex-1 h-1 mx-2 rounded-full transition-colors ${
-                      step > stepNum ? 'bg-primary' : 'bg-muted'
-                    }`}
-                  />
-                )}
-              </React.Fragment>
+            {[1, 2, 3].map(num => (
+              <div key={num} className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= num ? 'bg-primary text-white' : 'bg-muted'}`}>
+                {num}
+              </div>
             ))}
           </div>
 
+          {/* STEP 1 */}
           {step === 1 && (
             <div className="space-y-4">
-              <div className="bg-muted rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  {professional && (
-                    <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-                      <Image
-                        src={professional?.avatar}
-                        alt={professional?.avatarAlt}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground line-clamp-1">
-                      {professional ? professional?.name : service?.name}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {professional ? professional?.specialization : service?.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               <Select
                 label="Visit Type"
                 options={visitTypeOptions}
-                value={bookingData?.visitType}
-                onChange={(value) => handleInputChange('visitType', value)}
+                value={bookingData.visitType}
+                onChange={value => handleInputChange('visitType', value)}
                 required
               />
 
               <Input
                 label="Preferred Date"
                 type="date"
-                value={bookingData?.date}
-                onChange={(e) => handleInputChange('date', e?.target?.value)}
+                value={bookingData.date}
+                onChange={e => handleInputChange('date', e.target.value)}
                 required
-                min={new Date()?.toISOString()?.split('T')?.[0]}
               />
 
               <Select
                 label="Preferred Time"
                 options={timeSlots}
-                value={bookingData?.time}
-                onChange={(value) => handleInputChange('time', value)}
-                placeholder="Select time slot"
+                value={bookingData.time}
+                onChange={value => handleInputChange('time', value)}
                 required
               />
 
               <Input
                 label="Reason for Visit"
-                type="text"
-                placeholder="Brief description of symptoms or concerns"
-                value={bookingData?.symptoms}
-                onChange={(e) => handleInputChange('symptoms', e?.target?.value)}
-                description="This helps the professional prepare for your appointment"
+                value={bookingData.symptoms}
+                onChange={e => handleInputChange('symptoms', e.target.value)}
               />
             </div>
           )}
 
+          {/* STEP 2 */}
           {step === 2 && (
             <div className="space-y-4">
-              <Input
-                label="Patient Full Name"
-                type="text"
-                placeholder="Enter patient's full name"
-                value={bookingData?.patientName}
-                onChange={(e) => handleInputChange('patientName', e?.target?.value)}
-                required
-              />
+              <Input label="Patient Name" value={bookingData.patientName}
+                onChange={e => handleInputChange('patientName', e.target.value)} required />
 
-              <Input
-                label="Patient Age"
-                type="number"
-                placeholder="Enter age"
-                value={bookingData?.patientAge}
-                onChange={(e) => handleInputChange('patientAge', e?.target?.value)}
-                required
-              />
+              <Input label="Age" type="number" value={bookingData.patientAge}
+                onChange={e => handleInputChange('patientAge', e.target.value)} required />
 
-              <Input
-                label="Contact Number"
-                type="tel"
-                placeholder="+1 (555) 000-0000"
-                value={bookingData?.contactNumber}
-                onChange={(e) => handleInputChange('contactNumber', e?.target?.value)}
-                required
-              />
+              <Input label="Contact Number" value={bookingData.contactNumber}
+                onChange={e => handleInputChange('contactNumber', e.target.value)} required />
 
-              <Input
-                label="Email Address"
-                type="email"
-                placeholder="patient@example.com"
-                value={bookingData?.email}
-                onChange={(e) => handleInputChange('email', e?.target?.value)}
-                required
-              />
+              <Input label="Email" type="email" value={bookingData.email}
+                onChange={e => handleInputChange('email', e.target.value)} required />
 
-              {bookingData?.visitType === 'home' && (
-                <Input
-                  label="Home Address"
-                  type="text"
-                  placeholder="Enter complete address"
-                  value={bookingData?.address}
-                  onChange={(e) => handleInputChange('address', e?.target?.value)}
-                  required
-                />
+              {bookingData.visitType === 'home' && (
+                <Input label="Home Address" value={bookingData.address}
+                  onChange={e => handleInputChange('address', e.target.value)} required />
               )}
 
-              <Input
-                label="Emergency Contact"
-                type="tel"
-                placeholder="+1 (555) 000-0000"
-                value={bookingData?.emergencyContact}
-                onChange={(e) => handleInputChange('emergencyContact', e?.target?.value)}
-                required
-              />
-
-              <Select
-                label="Insurance Provider"
-                options={insuranceProviders}
-                value={bookingData?.insuranceProvider}
-                onChange={(value) => handleInputChange('insuranceProvider', value)}
-                placeholder="Select insurance provider"
-              />
-
-              {bookingData?.insuranceProvider && bookingData?.insuranceProvider !== 'none' && (
-                <Input
-                  label="Policy Number"
-                  type="text"
-                  placeholder="Enter policy number"
-                  value={bookingData?.policyNumber}
-                  onChange={(e) => handleInputChange('policyNumber', e?.target?.value)}
-                />
-              )}
-
-              <Input
-                label="Special Requirements"
-                type="text"
-                placeholder="Any special needs or accommodations"
-                value={bookingData?.specialRequirements}
-                onChange={(e) => handleInputChange('specialRequirements', e?.target?.value)}
-              />
+              <Input label="Emergency Contact" value={bookingData.emergencyContact}
+                onChange={e => handleInputChange('emergencyContact', e.target.value)} required />
             </div>
           )}
 
+          {/* STEP 3 */}
           {step === 3 && (
-            <div className="space-y-4">
-              <div className="bg-muted rounded-lg p-4 space-y-3">
-                <h3 className="font-semibold text-foreground mb-3">Appointment Summary</h3>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Professional:</span>
-                  <span className="font-medium text-foreground">
-                    {professional ? professional?.name : service?.name}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Visit Type:</span>
-                  <span className="font-medium text-foreground capitalize">
-                    {bookingData?.visitType?.replace('-', ' ')}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Date & Time:</span>
-                  <span className="font-medium text-foreground">
-                    {bookingData?.date} at {bookingData?.time}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Patient:</span>
-                  <span className="font-medium text-foreground">{bookingData?.patientName}</span>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Contact:</span>
-                  <span className="font-medium text-foreground">{bookingData?.contactNumber}</span>
-                </div>
-
-                <div className="pt-3 border-t border-border">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Consultation Fee:</span>
-                    <span className="text-xl font-bold text-primary">
-                      ${professional ? professional?.consultationFee : service?.price}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <Icon name="Info" size={20} color="var(--color-accent)" className="flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-foreground">
-                    <p className="font-medium mb-1">Important Information:</p>
-                    <ul className="space-y-1 text-muted-foreground">
-                      <li>• You will receive a confirmation email within 5 minutes</li>
-                      <li>• The professional will contact you 24 hours before the appointment</li>
-                      <li>• Cancellation is free up to 24 hours before the appointment</li>
-                      <li>• Please have your insurance card ready if applicable</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
+            <>
               <Checkbox
-                label="I agree to the Terms of Service and Privacy Policy"
-                checked={bookingData?.agreeToTerms}
-                onChange={(e) => handleInputChange('agreeToTerms', e?.target?.checked)}
-                required
+                label="I agree to the Terms & Conditions"
+                checked={bookingData.agreeToTerms}
+                onChange={e => handleInputChange('agreeToTerms', e.target.checked)}
               />
-            </div>
+            </>
           )}
 
-          <div className="flex items-center justify-between gap-3 mt-6 pt-6 border-t border-border">
-            {step > 1 && (
-              <Button
-                variant="outline"
-                iconName="ChevronLeft"
-                iconPosition="left"
-                onClick={handleBack}
-              >
-                Back
-              </Button>
-            )}
-            {step < 3 ? (
-              <Button
-                variant="default"
-                iconName="ChevronRight"
-                iconPosition="right"
-                onClick={handleNext}
-                className="ml-auto"
-              >
-                Continue
-              </Button>
-            ) : (
-              <Button
-                variant="default"
-                iconName="Check"
-                iconPosition="left"
-                onClick={handleSubmit}
-                disabled={!bookingData?.agreeToTerms}
-                className="ml-auto"
-              >
-                Confirm Booking
-              </Button>
-            )}
+          {/* FOOTER */}
+          <div className="flex justify-between mt-6">
+            {step > 1 && <Button onClick={handleBack}>Back</Button>}
+            {step < 3
+              ? <Button onClick={handleNext}>Continue</Button>
+              : <Button onClick={handleSubmit} disabled={!bookingData.agreeToTerms}>Confirm</Button>
+            }
           </div>
+
         </div>
       </div>
     </div>
