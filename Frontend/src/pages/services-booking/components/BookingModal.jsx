@@ -53,6 +53,11 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
   const handleBack = () => setStep(prev => Math.max(prev - 1, 1));
 
   const handleSubmit = async () => {
+    if (!bookingData.agreeToTerms) {
+  toast.error("Please accept Terms & Conditions");
+  return;
+}
+
     if (!bookingData.date || !bookingData.time) {
   toast.error('Please select date and time');
   return;
@@ -381,16 +386,16 @@ const payload = {
                 Continue
               </Button>
             ) : (
-              <Button
-                variant="default"
-                iconName="Check"
-                iconPosition="left"
-                onClick={handleSubmit}
-                disabled={!bookingData?.agreeToTerms}
-                className="ml-auto"
-              >
-                Confirm Booking
-              </Button>
+             <Button
+  variant="default"
+  iconName="Check"
+  iconPosition="left"
+  onClick={handleSubmit}
+  className="ml-auto"
+>
+  Confirm Booking
+</Button>
+
             )}
           </div>
         </div>
