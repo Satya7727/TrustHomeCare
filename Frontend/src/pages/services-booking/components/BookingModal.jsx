@@ -64,10 +64,8 @@ if (bookingData.visitType === 'home' && !bookingData.address) {
 }
 
     try {
-      const payload = {
-  serviceType: professional
-    ? professional.specialization
-    : service.name,
+const payload = {
+  serviceType: "GENERAL_CONSULTATION",
 
   visitType:
     bookingData.visitType === 'home'
@@ -76,22 +74,22 @@ if (bookingData.visitType === 'home' && !bookingData.address) {
       ? 'TELEHEALTH'
       : 'CLINIC_VISIT',
 
-  preferredDate: new Date(bookingData.date),
+  preferredDate: bookingData.date,
   preferredTime: bookingData.time,
 
   reasonForVisit: bookingData.symptoms,
 
- patient: {
-  fullName: bookingData.patientName,
-  age: Number(bookingData.patientAge),
-  contactNumber: bookingData.contactNumber,
-  email: bookingData.email,
-  emergencyContact: bookingData.emergencyContact,
-  ...(bookingData.visitType === 'home' && {
-    address: bookingData.address,
-  }),
-},
-
+  patient: {
+    fullName: bookingData.patientName,
+    age: Number(bookingData.patientAge),
+    contactNumber: bookingData.contactNumber,
+    email: bookingData.email,
+    emergencyContact: bookingData.emergencyContact,
+    address:
+      bookingData.visitType === 'home'
+        ? bookingData.address
+        : undefined
+  },
 
   consultationFee: professional
     ? professional.consultationFee
@@ -99,6 +97,7 @@ if (bookingData.visitType === 'home' && !bookingData.address) {
 
   termsAccepted: bookingData.agreeToTerms
 };
+
 
 
       await api.post('/appointment/book', payload);
