@@ -1,14 +1,14 @@
 const Joi = require("joi");
 
 const equipmentBookingSchema = Joi.object({
+
   equipmentName: Joi.string().trim().required().messages({
-    "string.empty": "Equipment name is required",
+    "string.empty": "Equipment name is missing",
     "any.required": "Equipment name is required",
   }),
 
   customerName: Joi.string().trim().required().messages({
     "string.empty": "Customer name is required",
-    "any.required": "Customer name is required",
   }),
 
   email: Joi.string()
@@ -17,23 +17,21 @@ const equipmentBookingSchema = Joi.object({
     .required()
     .messages({
       "string.email": "Please provide a valid email address",
-      "string.empty": "Email address is required",
-      "any.required": "Email address is required",
+      "string.empty": "Email is required",
     }),
 
   phone: Joi.string()
     .trim()
-    .pattern(/^[0-9]{10}$/)
+
+    .pattern(/^(\+91[\-\s]?)?[0]?[6789]\d{9}$/) 
     .required()
     .messages({
-      "string.pattern.base": "Phone number must be exactly 10 digits",
+      "string.pattern.base": "Please enter a valid 10-digit phone number",
       "string.empty": "Phone number is required",
-      "any.required": "Phone number is required",
     }),
 
   address: Joi.string().trim().required().messages({
-    "string.empty": "Address is required",
-    "any.required": "Address is required",
+    "string.empty": "Delivery address is required",
   }),
 
   notes: Joi.string().trim().allow("").optional(),
@@ -45,9 +43,11 @@ const equipmentBookingValidator = (req, res, next) => {
   });
 
   if (error) {
+    console.log("Joi Validation Error Details:", error.details.map(d => d.message));
+
     return res.status(400).json({
       success: false,
-      message: "Validation failed",
+      message: error.details[0].message, 
       errors: error.details.map((err) => err.message),
     });
   }

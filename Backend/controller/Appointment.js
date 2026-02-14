@@ -78,32 +78,81 @@ const sendEmailsAsync = async (appointment) => {
       await sendMail({
         to: adminEmail,
         subject: `📢 NEW BOOKING: ${appointment.patient.fullName} | ${appointment.visitType}`,
-        html: `
-          <div style="${commonStyles} background-color: #f4f7f6; padding: 30px;">
-            <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; border-top: 5px solid #2d3748; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-              <div style="padding: 25px;">
-                <h2 style="margin: 0 0 20px; color: #1a202c;">New Appointment Alert</h2>
-                
-                <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
-                  <tr style="border-bottom: 1px solid #edf2f7;"><td style="padding: 10px 0; color: #718096;">Patient</td><td style="padding: 10px 0; font-weight: bold;">${appointment.patient.fullName} (Age: ${appointment.patient.age})</td></tr>
-                  <tr style="border-bottom: 1px solid #edf2f7;"><td style="padding: 10px 0; color: #718096;">Contact</td><td style="padding: 10px 0;">${appointment.patient.contactNumber}</td></tr>
-                  <tr style="border-bottom: 1px solid #edf2f7;"><td style="padding: 10px 0; color: #718096;">Email</td><td style="padding: 10px 0;">${appointment.patient.email}</td></tr>
-                  <tr style="border-bottom: 1px solid #edf2f7;"><td style="padding: 10px 0; color: #718096;">Schedule</td><td style="padding: 10px 0;">${formattedDate} at ${appointment.preferredTime}</td></tr>
-                  <tr style="border-bottom: 1px solid #edf2f7;"><td style="padding: 10px 0; color: #718096;">Visit Type</td><td style="padding: 10px 0;"><span style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${appointment.visitType}</span></td></tr>
-                  ${
-                    appointment.visitType === "HOME_VISIT"
-                      ? `<tr><td style="padding: 10px 0; color: #718096;">Location</td><td style="padding: 10px 0; color: #e53e3e; font-weight: bold;">${appointment.patient.address}</td></tr>`
-                      : ""
-                  }
-                </table>
+        html: `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #2d3748; background-color: #f4f6f8; padding: 40px 20px;">
+  <div style="max-width: 650px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
 
-                <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed #cbd5e0;">
-                  <p style="font-size: 12px; color: #a0aec0;">Reason for visit: ${appointment.reasonForVisit || 'Not provided'}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        `,
+    <!-- Header -->
+    <div style="background-color: #1d4ed8; padding: 30px; text-align: center;">
+      <h1 style="color: #ffffff; margin: 0; font-size: 26px; letter-spacing: 1px;">TrustHomeCare Admin</h1>
+      <p style="color: #c7d2fe; margin: 5px 0 0; font-size: 14px;">New Appointment Notification</p>
+    </div>
+
+    <!-- Body -->
+    <div style="padding: 40px;">
+      <h2 style="margin-top: 0; font-size: 20px; color: #1a202c;">New Appointment Booked</h2>
+      <p style="font-size: 14px; color: #4a5568;">Hello Admin,</p>
+      <p style="font-size: 14px; color: #4a5568;">A new appointment has been scheduled. Here are the details:</p>
+
+      <!-- Details Table -->
+      <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin: 25px 0; border-left: 4px solid #1d4ed8;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #2d3748;">
+          <tr>
+            <td style="padding: 10px 0; color: #718096;">Patient Name</td>
+            <td style="padding: 10px 0; font-weight: 600;">${appointment.patient.fullName} (Age: ${appointment.patient.age})</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #718096;">Contact Number</td>
+            <td style="padding: 10px 0; font-weight: 600;">${appointment.patient.contactNumber}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #718096;">Email</td>
+            <td style="padding: 10px 0; font-weight: 600;">${appointment.patient.email}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #718096;">Appointment Date</td>
+            <td style="padding: 10px 0; font-weight: 600;">${formattedDate}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #718096;">Appointment Time</td>
+            <td style="padding: 10px 0; font-weight: 600;">${appointment.preferredTime}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #718096;">Visit Type</td>
+            <td style="padding: 10px 0; font-weight: 600;">
+              <span style="background: #e2e8f0; padding: 3px 8px; border-radius: 4px; font-size: 12px;">
+                ${appointment.visitType.replace('_', ' ')}
+              </span>
+            </td>
+          </tr>
+          ${appointment.visitType === "HOME_VISIT" ? `
+          <tr>
+            <td style="padding: 10px 0; color: #718096;">Patient Address</td>
+            <td style="padding: 10px 0; font-weight: 600; color: #1d4ed8;">${appointment.patient.address}</td>
+          </tr>` : ""}
+          <tr>
+            <td style="padding: 10px 0; color: #718096;">Reason for Visit</td>
+            <td style="padding: 10px 0; font-weight: 600;">${appointment.reasonForVisit || 'Not Provided'}</td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="font-size: 14px; color: #4a5568;">Please review the appointment and take the necessary action. For any queries, contact the patient directly or reach out to the support team.</p>
+
+      <!-- Contact Button -->
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="mailto:support@trusthomecare.com" style="background-color: #1d4ed8; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Contact Support</a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="background-color: #edf2f7; padding: 20px; text-align: center; font-size: 12px; color: #718096;">
+      © ${new Date().getFullYear()} TrustHomeCare Services. <br>
+      This is an automated notification. Please do not reply directly to this email.
+    </div>
+
+  </div>
+</div>
+`,
       });
     }
 

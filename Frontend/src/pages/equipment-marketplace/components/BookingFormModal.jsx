@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-
 import api from "../../../api/axios";
 import Button from "../../../components/ui/Button";
 import Icon from "../../../components/AppIcon";
 
 const BookingFormModal = ({ isOpen, onClose, equipment }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -19,119 +17,137 @@ const BookingFormModal = ({ isOpen, onClose, equipment }) => {
   if (!isOpen) return null;
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
 
-    if (!form.name || !form.email || !form.phone || !form.address) {
-      toast.error("Please fill all required fields");
+    if (!equipment?.name) {
+      toast.error("Equipment information is missing. Please refresh.");
       return;
     }
 
     const payload = {
-      equipment: equipment?.name,
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      address: form.address,
-      notes: form.notes,
+      equipmentName: equipment.name, 
+      customerName: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+      address: form.address.trim(),
+      notes: form.notes.trim(),
     };
 
     try {
       setIsSubmitting(true);
+      const response = await api.post("/equipment/book", payload);
 
-      await api.post("/equipment/book", payload);
-
-      toast.success("Equipment booking submitted successfully!");
-      setTimeout(onClose, 1200);
-
+      if (response.data.success) {
+        toast.success("Booking request submitted!");
+        setTimeout(onClose, 1500);
+      }
     } catch (error) {
-      console.error(error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to submit booking. Please try again."
-      );
+      console.error("Submission Error:", error);
+
+      
+      const errorMessage = 
+        error.response?.data?.message || 
+        error.response?.data?.errors?.[0] || 
+        "Something went wrong. Please try again.";
+
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       {isSubmitting && (
-        <div className="fixed inset-0 z-[999] bg-black/40 flex items-center justify-center">
-          <div className="bg-white rounded-lg px-6 py-4 flex items-center gap-3 shadow-xl">
-            <span className="w-6 h-6 border-3 border-primary border-t-transparent rounded-full animate-spin"></span>
-            <p className="font-medium">Submitting booking...</p>
+        <div className="absolute inset-0 z-[60] bg-white/60 flex items-center justify-center rounded-lg">
+          <div className="flex flex-col items-center gap-2">
+            <span className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></span>
+            <p className="text-sm font-semibold text-blue-900">Processing Request...</p>
           </div>
         </div>
       )}
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-        <div className="bg-card rounded-lg shadow-strong max-w-lg w-full p-6">
+      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">
+        <div className="bg-blue-600 p-4 flex justify-between items-center text-white">
+          <h3 className="text-lg font-bold">Equipment Booking</h3>
+          <button onClick={onClose} className="hover:rotate-90 transition-transform">
+            <Icon name="X" size={24} />
+          </button>
+        </div>
 
-          <div className="flex justify-between mb-4">
-            <h3 className="text-xl font-bold">Book Equipment</h3>
-            <button onClick={onClose}>
-              <Icon name="X" size={22} />
-            </button>
+        <div className="p-6">
+          <div className="mb-6 p-3 bg-blue-50 border-l-4 border-blue-600 rounded">
+            <p className="text-xs uppercase tracking-wider text-blue-600 font-bold">Selected Item</p>
+            <p className="text-lg font-semibold text-slate-800">{equipment?.name}</p>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-4">
-            <strong>{equipment?.name}</strong>
-          </p>
-
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              name="name"
-              placeholder="Full Name"
-              required
-              className="w-full p-2 border rounded-md"
-              onChange={handleChange}
-            />
-
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              required
-              className="w-full p-2 border rounded-md"
-              onChange={handleChange}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                name="name"
+                value={form.name}
+                placeholder="Full Name"
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                onChange={handleChange}
+                required
+              />
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                placeholder="Email Address"
+                className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                onChange={handleChange}
+                required
+              />
+            </div>
 
             <input
               name="phone"
-              placeholder="Phone Number"
-              required
-              className="w-full p-2 border rounded-md"
+              value={form.phone}
+              placeholder="Phone (e.g. 9876543210)"
+              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               onChange={handleChange}
+              required
             />
 
             <textarea
               name="address"
-              placeholder="Delivery Address"
-              required
-              className="w-full p-2 border rounded-md"
+              value={form.address}
+              placeholder="Full Delivery Address"
+              rows="2"
+              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
               onChange={handleChange}
+              required
             />
 
             <textarea
               name="notes"
-              placeholder="Additional Notes (Optional)"
-              className="w-full p-2 border rounded-md"
+              value={form.notes}
+              placeholder="Any special instructions? (Optional)"
+              rows="2"
+              className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-light"
               onChange={handleChange}
             />
 
-            <Button type="submit" fullWidth disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit Booking Request"}
+            <Button 
+              type="submit" 
+              fullWidth 
+              disabled={isSubmitting}
+              className="py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors shadow-lg"
+            >
+              {isSubmitting ? "Sending Request..." : "Confirm Booking Request"}
             </Button>
           </form>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

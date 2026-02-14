@@ -1,139 +1,135 @@
-import React, { useState } from "react";
-import toast from "react-hot-toast";
+const Equipment = require("../models/Equipment");
+const sendMail = require("../config/sendmail");
 
-import api from "../../../api/axios";
-import Button from "../../../components/ui/Button";
-import Icon from "../../../components/AppIcon";
+const sendEquipmentEmailsAsync = async (booking) => {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL;
 
-const BookingFormModal = ({ isOpen, onClose, equipment }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+    const baseStyles = `
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #2d3748;
+    `;
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    notes: "",
-  });
+    await sendMail({
+      to: booking.email,
+      subject: "✅ Your Equipment Booking | TrustHomeCare",
+      html: `
+      <div style="${baseStyles} background-color: #f7fafc; padding: 40px 20px;">
+        <div style="max-width: 620px; margin: auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 6px 20px rgba(0,0,0,0.05);">
 
-  if (!isOpen) return null;
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (isSubmitting) return;
-
-    if (!form.name || !form.email || !form.phone || !form.address) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-
-    const payload = {
-      equipment: equipment?.name,
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      address: form.address,
-      notes: form.notes,
-    };
-
-    try {
-      setIsSubmitting(true);
-
-      await api.post("/equipment/book", payload);
-
-      toast.success("Equipment booking submitted successfully!");
-      setTimeout(onClose, 1200);
-
-    } catch (error) {
-      console.error(error);
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to submit booking. Please try again."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <>
-
-      {isSubmitting && (
-        <div className="fixed inset-0 z-[999] bg-black/40 flex items-center justify-center">
-          <div className="bg-white rounded-lg px-6 py-4 flex items-center gap-3 shadow-xl">
-            <span className="w-6 h-6 border-3 border-primary border-t-transparent rounded-full animate-spin"></span>
-            <p className="font-medium">Submitting booking...</p>
-          </div>
-        </div>
-      )}
-
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-        <div className="bg-card rounded-lg shadow-strong max-w-lg w-full p-6">
-
-          <div className="flex justify-between mb-4">
-            <h3 className="text-xl font-bold">Book Equipment</h3>
-            <button onClick={onClose}>
-              <Icon name="X" size={22} />
-            </button>
+          <div style="background-color: #0056b3; padding: 28px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">TrustHomeCare</h1>
+            <p style="color: #e0eaff; margin-top: 6px; font-size: 14px;">Medical Equipment Rental Services</p>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-4">
-            <strong>{equipment?.name}</strong>
-          </p>
+          <div style="padding: 35px;">
+            <h2 style="margin-top:0; font-size:20px;">Booking Request Confirmed</h2>
+            <p>Dear <strong>${booking.customerName}</strong>,</p>
+            <p>Thank you for choosing <strong>TrustHomeCare</strong>. Your equipment booking has been received successfully. Here are the details:</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              name="name"
-              placeholder="Full Name"
-              required
-              className="w-full p-2 border rounded-md"
-              onChange={handleChange}
-            />
+            <div style="background-color:#f8fafc; border-left:4px solid #0056b3; padding:20px; margin:25px 0; border-radius:8px;">
+              <p><strong>Equipment:</strong> ${booking.equipmentName}</p>
+              <p><strong>Delivery Address:</strong> ${booking.address}</p>
+              <p><strong>Phone:</strong> ${booking.phone}</p>
+              <p><strong>Notes:</strong> ${booking.notes || "—"}</p>
+            </div>
 
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              required
-              className="w-full p-2 border rounded-md"
-              onChange={handleChange}
-            />
+            <p style="font-size:14px; color:#4a5568;">
+              Our team will contact you shortly to confirm availability, pricing, and delivery schedule.
+            </p>
 
-            <input
-              name="phone"
-              placeholder="Phone Number"
-              required
-              className="w-full p-2 border rounded-md"
-              onChange={handleChange}
-            />
+            <div style="text-align:center; margin-top:30px;">
+              <a href="mailto:support@trusthomecare.com" style="background-color:#0056b3; color:white; padding:12px 25px; text-decoration:none; border-radius:5px; font-weight:bold;">Contact Support</a>
+            </div>
 
-            <textarea
-              name="address"
-              placeholder="Delivery Address"
-              required
-              className="w-full p-2 border rounded-md"
-              onChange={handleChange}
-            />
+            <p style="margin-top:25px; font-size:13px; color:#718096;">
+              This is an automated email. Please do not reply.
+            </p>
+          </div>
 
-            <textarea
-              name="notes"
-              placeholder="Additional Notes (Optional)"
-              className="w-full p-2 border rounded-md"
-              onChange={handleChange}
-            />
+          <div style="background-color:#edf2f7; padding:18px; text-align:center; font-size:12px; color:#718096;">
+            © ${new Date().getFullYear()} TrustHomeCare. All rights reserved.
+          </div>
 
-            <Button type="submit" fullWidth disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Submit Booking Request"}
-            </Button>
-          </form>
         </div>
       </div>
-    </>
-  );
+      `,
+    });
+
+    if (adminEmail) {
+      await sendMail({
+        to: adminEmail,
+        subject: `📢 New Equipment Booking | ${booking.equipmentName}`,
+        html: `
+        <div style="${baseStyles} background-color: #f4f7f6; padding: 35px;">
+          <div style="max-width:620px; margin:auto; background:#ffffff; border-radius:12px; border-top:6px solid #2d3748; box-shadow:0 6px 18px rgba(0,0,0,0.08);">
+            <div style="padding:30px;">
+              <h2 style="margin-top:0; font-size:20px;">New Equipment Booking Received</h2>
+              <p style="font-size:14px; color:#4a5568;">Hello Admin, a new equipment booking has been submitted. Details below:</p>
+
+              <table style="width:100%; border-collapse:collapse; font-size:14px; margin-top:15px;">
+                <tr><td style="padding:8px 0; color:#718096;">Equipment</td><td><strong>${booking.equipmentName}</strong></td></tr>
+                <tr><td style="padding:8px 0; color:#718096;">Customer</td><td>${booking.customerName}</td></tr>
+                <tr><td style="padding:8px 0; color:#718096;">Email</td><td>${booking.email}</td></tr>
+                <tr><td style="padding:8px 0; color:#718096;">Phone</td><td>${booking.phone}</td></tr>
+                <tr><td style="padding:8px 0; color:#718096;">Address</td><td>${booking.address}</td></tr>
+                <tr><td style="padding:8px 0; color:#718096;">Notes</td><td>${booking.notes || "—"}</td></tr>
+              </table>
+
+              <p style="margin-top:20px; font-size:12px; color:#a0aec0;">
+                Please contact the customer to confirm rental terms and delivery.
+              </p>
+            </div>
+          </div>
+        </div>
+        `,
+      });
+    }
+
+    console.log("✅ Equipment booking emails sent successfully");
+  } catch (error) {
+    console.error("❌ Equipment email error:", error.message);
+  }
 };
 
-export default BookingFormModal;
+exports.bookingEquipment = async (req, res) => {
+  try {
+    const { equipmentName, customerName, email, phone, address, notes } = req.body;
+
+    if (!equipmentName || !customerName || !email || !phone || !address) {
+      return res.status(400).json({
+        success: false,
+        message: "All required fields must be filled.",
+      });
+    }
+
+    const booking = await Equipment.create({
+      equipmentName,
+      customerName,
+      email,
+      phone,
+      address,
+      notes,
+    });
+
+    await sendEquipmentEmailsAsync(booking.toObject());
+
+    return res.status(201).json({
+      success: true,
+      message: "Equipment booking submitted successfully!",
+      data: booking._id,
+    });
+  } catch (error) {
+    console.error("Equipment Booking Error:", error);
+
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
