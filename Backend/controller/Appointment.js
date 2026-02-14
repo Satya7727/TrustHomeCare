@@ -1,62 +1,16 @@
 const Appointment = require("../models/Appointment");
 const sendMail = require("../config/sendmail");
 
-exports.bookAppointment = async (req, res) => {
+const sendEmailsAsync = async (appointment) => {
   try {
-    const {
-      serviceType,
-      visitType,
-      preferredDate,
-      preferredTime,
-      patient,
-      consultationFee,
-      termsAccepted,
-    } = req.body;
-
-    /* ================= VALIDATION ================= */
-    if (
-      !serviceType ||
-      !visitType ||
-      !preferredDate ||
-      !preferredTime ||
-      !patient ||
-      !patient.fullName ||
-      patient.age == null ||
-      !patient.contactNumber ||
-      !patient.email ||
-      !patient.emergencyContact ||
-      consultationFee == null ||
-      termsAccepted !== true
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing or invalid appointment details",
-      });
-    }
-
-    /* ================= SAVE APPOINTMENT ================= */
-    const appointment = await Appointment.create({
-      ...req.body,
-      confirmedAt: new Date(),
-    });
-
-    /* ================= SEND RESPONSE FIRST ================= */
-    res.status(201).json({
-      success: true,
-      message: "Appointment booked successfully",
-      data: appointment,
-    });
-
-    /* ================= EMAILS (BACKGROUND) ================= */
-
     const userEmail = appointment.patient.email;
     const adminEmail = process.env.ADMIN_EMAIL;
     const formattedDate = new Date(
       appointment.preferredDate
     ).toDateString();
 
-    /* ================= USER EMAIL ================= */
-    sendMail({
+    // USER EMAIL
+    await sendMail({
       to: userEmail,
       subject: "✅ Appointment Confirmed | TrustHomeCare",
       html: `
@@ -110,16 +64,14 @@ exports.bookAppointment = async (req, res) => {
           </div>
         </div>
       `,
-    }).catch(err =>
-      console.error("User email failed:", err.message)
-    );
+    });
 
-    /* ================= ADMIN EMAIL ================= */
+    // ADMIN EMAIL
     if (adminEmail) {
-      sendMail({
+      await sendMail({
         to: adminEmail,
         subject: "📢 New Appointment Booked | TrustHomeCare",
-        html: `
+        html:  `
           <div style="font-family: Arial, sans-serif; background:#f4f6f8; padding:30px;">
             <div style="max-width:650px; margin:auto; background:#fff; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.08);">
 
@@ -147,10 +99,63 @@ exports.bookAppointment = async (req, res) => {
             </div>
           </div>
         `,
-      }).catch(err =>
-        console.error("Admin email failed:", err.message)
-      );
+      });
     }
+
+    console.log("Emails sent successfully");
+  } catch (err) {
+    console.error("Email sending failed:", err.message);
+  }
+};
+
+exports.bookAppointment = async (req, res) => {
+  try {
+    const {
+      serviceType,
+      visitType,
+      preferredDate,
+      preferredTime,
+      patient,
+      consultationFee,
+      termsAccepted,
+    } = req.body;
+
+    // VALIDATION
+    if (
+      !serviceType ||
+      !visitType ||
+      !preferredDate ||
+      !preferredTime ||
+      !patient ||
+      !patient.fullName ||
+      patient.age == null ||
+      !patient.contactNumber ||
+      !patient.email ||
+      !patient.emergencyContact ||
+      consultationFee == null ||
+      termsAccepted !== true
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing or invalid appointment details",
+      });
+    }
+
+    // SAVE APPOINTMENT
+    const appointment = await Appointment.create({
+      ...req.body,
+      confirmedAt: new Date(),
+    });
+
+    // RESPOND FIRST
+    res.status(201).json({
+      success: true,
+      message: "Appointment booked successfully",
+      data: appointment,
+    });
+
+    // 🔥 FORCE ASYNC EXECUTION
+    setImmediate(() => sendEmailsAsync(appointment));
 
   } catch (error) {
     console.error("Booking Error:", error);
