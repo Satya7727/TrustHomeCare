@@ -81,17 +81,17 @@ if (bookingData.visitType === 'home' && !bookingData.address) {
 
   reasonForVisit: bookingData.symptoms,
 
-  patient: {
-    fullName: bookingData.patientName,
-    age: Number(bookingData.patientAge),
-    contactNumber: bookingData.contactNumber,
-    email: bookingData.email,
-    emergencyContact: bookingData.emergencyContact,
-    address:
-      bookingData.visitType === 'home'
-        ? bookingData.address
-        : undefined
-  },
+ patient: {
+  fullName: bookingData.patientName,
+  age: Number(bookingData.patientAge),
+  contactNumber: bookingData.contactNumber,
+  email: bookingData.email,
+  emergencyContact: bookingData.emergencyContact,
+  ...(bookingData.visitType === 'home' && {
+    address: bookingData.address,
+  }),
+},
+
 
   consultationFee: professional
     ? professional.consultationFee

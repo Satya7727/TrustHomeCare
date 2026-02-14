@@ -14,25 +14,26 @@ exports.bookAppointment = async (req, res) => {
       termsAccepted,
     } = req.body;
 
-    if (
-      !serviceType ||
-      !visitType ||
-      !preferredDate ||
-      !preferredTime ||
-      !patient ||
-      !patient.fullName ||
-      !patient.age ||
-      !patient.contactNumber ||
-      !patient.email ||
-      !patient.emergencyContact ||
-      !consultationFee ||
-      termsAccepted !== true
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing or invalid appointment details",
-      });
-    }
+if (
+  !serviceType ||
+  !visitType ||
+  !preferredDate ||
+  !preferredTime ||
+  !patient ||
+  !patient.fullName ||
+  patient.age == null ||
+  !patient.contactNumber ||
+  !patient.email ||
+  !patient.emergencyContact ||
+  consultationFee == null ||
+  termsAccepted !== true
+) {
+  return res.status(400).json({
+    success: false,
+    message: "Missing or invalid appointment details",
+  });
+}
+
 
     const appointment = new Appointment({
       ...req.body,

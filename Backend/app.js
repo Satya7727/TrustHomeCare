@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(helmet());
 app.use(
   cors({
-    origin: "https://trust-home-care.vercel.app/",
+    origin: "https://trust-home-care.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
