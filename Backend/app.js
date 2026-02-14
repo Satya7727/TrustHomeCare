@@ -15,7 +15,6 @@ app.use(
   cors({
     origin: "https://trust-home-care-jg61.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
   })
 );
 
