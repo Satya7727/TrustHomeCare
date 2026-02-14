@@ -49,11 +49,12 @@ const appointmentSchema = new mongoose.Schema(
       },
 
       email: {
-        type: String,
-        required: true,
-        lowercase: true,
-        match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
-      },
+  type: String,
+  required: true,
+  lowercase: true,
+  trim: true, // Add this!
+  match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
+},
 
       emergencyContact: {
         type: String,
@@ -61,12 +62,14 @@ const appointmentSchema = new mongoose.Schema(
       },
 
       address: {
-        type: String,
-        trim:true,
-        required: function () {
-          return this.visitType === "HOME_VISIT";
-        },
-      },
+  type: String,
+  trim: true,
+  required: function () {
+    // 'this' is the patient object. Use 'this.parent()' to get the root.
+    const root = this.ownerDocument ? this.ownerDocument() : this.parent();
+    return root.visitType === "HOME_VISIT";
+  },
+},
     },
 
     consultationFee: {
