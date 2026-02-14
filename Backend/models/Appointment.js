@@ -62,10 +62,10 @@ const appointmentSchema = new mongoose.Schema(
 
       address: {
         type: String,
+        trim:true,
         required: function () {
-          return this.parent().visitType === "HOME_VISIT";
+          return this.visitType === "HOME_VISIT";
         },
-        trim: true,
       },
     },
 
