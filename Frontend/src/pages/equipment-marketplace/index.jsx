@@ -1,4 +1,9 @@
 import React, { useState, useMemo } from 'react';
+
+import BookingFormModal from './components/BookingFormModal';
+
+
+
 import Header from '../../components/ui/Header';
 import Footer from '../../components/ui/Footer';
 import CategoryFilter from './components/CategoryFilter';
@@ -16,7 +21,13 @@ const EquipmentMarketplace = () => {
   const [sortBy, setSortBy] = useState('relevance');
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [cartItems, setCartItems] = useState([]);
+  // const [cartItems, setCartItems] = useState([]);
+const [bookingEquipment, setBookingEquipment] = useState(null);
+const [showBookingForm, setShowBookingForm] = useState(false);
+
+
+
+
   const [filters, setFilters] = useState({
     priceMin: '',
     priceMax: '',
@@ -427,10 +438,17 @@ const EquipmentMarketplace = () => {
     });
   };
 
-  const handleAddToCart = (equipment) => {
-    setCartItems(prev => [...prev, equipment]);
-    alert(`${equipment?.name} added to cart!`);
-  };
+  // const handleAddToCart = (equipment) => {
+  //   setCartItems(prev => [...prev, equipment]);
+  //   alert(`${equipment?.name} added to cart!`);
+  // };
+
+ const handleBookNow = (equipment) => {
+  setBookingEquipment(equipment);
+  setShowBookingForm(true);
+};
+
+
 
   const filteredEquipment = useMemo(() => {
     let filtered = equipmentData;
@@ -547,7 +565,7 @@ const EquipmentMarketplace = () => {
                       key={equipment?.id}
                       equipment={equipment}
                       onViewDetails={setSelectedEquipment}
-                      onAddToCart={handleAddToCart}
+                      onBookNow={handleBookNow}
                     />
                   ))}
                 </div>
@@ -630,13 +648,27 @@ const EquipmentMarketplace = () => {
         </div>
       </main>
       <Footer />
-      {selectedEquipment && (
+      {/* {selectedEquipment && (
         <EquipmentModal
           equipment={selectedEquipment}
           onClose={() => setSelectedEquipment(null)}
           onAddToCart={handleAddToCart}
         />
-      )}
+      )} */}
+      {selectedEquipment && (
+  <EquipmentModal
+    equipment={selectedEquipment}
+    onClose={() => setSelectedEquipment(null)}
+    onBookNow={handleBookNow}
+  />
+)}<BookingFormModal
+        isOpen={showBookingForm}
+        equipment={bookingEquipment}
+        onClose={() => {
+          setShowBookingForm(false);
+          setBookingEquipment(null);
+        }}
+      />
     </div>
   );
 };

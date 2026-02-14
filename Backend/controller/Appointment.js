@@ -1,10 +1,7 @@
 const Appointment = require("../models/Appointment");
 const sendMail = require("../config/sendmail");
 
-/**
- * BEAUTIFIED EMAIL SENDER
- * Fixed for Render: Uses await to ensure delivery before process sleep
- */
+
 const sendEmailsAsync = async (appointment) => {
   try {
     const userEmail = appointment.patient.email;
@@ -19,7 +16,6 @@ const sendEmailsAsync = async (appointment) => {
         color: #2d3748;
     `;
 
-    // ================= USER EMAIL (Modern Design) =================
     await sendMail({
       to: userEmail,
       subject: "✅ Confirmed: Your Appointment with TrustHomeCare",
@@ -77,7 +73,7 @@ const sendEmailsAsync = async (appointment) => {
       `,
     });
 
-    // ================= ADMIN EMAIL (Professional Alert) =================
+
     if (adminEmail) {
       await sendMail({
         to: adminEmail,
@@ -117,9 +113,7 @@ const sendEmailsAsync = async (appointment) => {
   }
 };
 
-/**
- * BOOK APPOINTMENT CONTROLLER
- */
+
 exports.bookAppointment = async (req, res) => {
   try {
     const {
@@ -132,7 +126,6 @@ exports.bookAppointment = async (req, res) => {
       termsAccepted,
     } = req.body;
 
-    // 1. DATA VALIDATION
     if (
       !serviceType ||
       !visitType ||
@@ -152,7 +145,6 @@ exports.bookAppointment = async (req, res) => {
       });
     }
 
-    // 2. CONDITIONAL ADDRESS VALIDATION
     if (visitType === "HOME_VISIT" && !patient.address) {
       return res.status(400).json({
         success: false,
@@ -160,16 +152,14 @@ exports.bookAppointment = async (req, res) => {
       });
     }
 
-    // 3. DATABASE SAVE
     const appointment = await Appointment.create({
       ...req.body,
       confirmedAt: new Date(),
     });
 
-    // 4. TRIGGER EMAILS (CRITICAL: We AWAIT here to ensure Render processes it)
+
     await sendEmailsAsync(appointment.toObject());
 
-    // 5. FINAL RESPONSE
     return res.status(201).json({
       success: true,
       message: "Your appointment has been booked successfully!",
@@ -179,7 +169,6 @@ exports.bookAppointment = async (req, res) => {
   } catch (error) {
     console.error("Booking Error:", error);
     
-    // Check for Mongoose Validation Errors specifically
     if (error.name === 'ValidationError') {
         return res.status(400).json({ success: false, message: error.message });
     }

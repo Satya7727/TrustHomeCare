@@ -55,7 +55,6 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
   const handleSubmit = async () => {
     if (isSubmitting) return;
 
-    // ================= VALIDATIONS =================
     if (!bookingData.agreeToTerms) {
       toast.error("Please accept Terms & Conditions");
       return;
@@ -71,7 +70,6 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
       return;
     }
 
-    // ================= START LOADING =================
     setIsSubmitting(true);
 
     try {
@@ -118,14 +116,12 @@ const BookingModal = ({ isOpen, onClose, service, professional }) => {
           "Failed to book appointment. Please try again.",
       );
     } finally {
-      // ================= STOP LOADING =================
       setIsSubmitting(false);
     }
   };
 
   return (
     <>
-      {/* 🔥 FULL SCREEN LOADING OVERLAY */}
       {isSubmitting && (
         <div className="fixed inset-0 z-[999] bg-black/40 flex items-center justify-center">
           <div className="bg-white rounded-lg px-6 py-4 flex items-center gap-3 shadow-xl">

@@ -5,23 +5,24 @@ const helmet = require("helmet");
 const cors = require("cors");
 
 const appointmentBooking = require("./routes/Appointment");
+const equipmentBooking = require("./routes/Equipment");
 
 const app = express();
 
 
 app.use(express.json());
 app.use(helmet());
-app.use(
-  cors({
-    
-    origin: "https://trust-home-care.vercel.app",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-  })
-);
+app.use(cors());
 
+// cors({
+    
+//     origin: "https://trust-home-care.vercel.app",
+//     methods: ["GET", "POST", "PUT", "DELETE"],
+//   })
 
 
 app.use("/appointment", appointmentBooking);
+app.use("/equipment", equipmentBooking);
 
 
 
