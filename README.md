@@ -52,12 +52,6 @@ Other Tools:
 
 ---
 
-## 🔗 GitHub Repository  
-
-👉 https://github.com/Satya7727/TrustHomeCare  
-
----
-
 ## ⚙️ Installation & Setup  
 
 ```bash
