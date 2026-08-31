@@ -49,10 +49,3 @@ Database:
 Other Tools:  
 - Nodemailer (for sending emails)  
 
-
-# Install frontend dependencies
-cd ../frontend
-npm install
-
-# Start frontend
-npm run dev
