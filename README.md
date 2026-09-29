@@ -3,7 +3,6 @@
 TrustHomeCare is a full-stack MERN application that allows users to book medical services and rent healthcare equipment online.  
 It simplifies appointment scheduling and equipment booking with an integrated email notification system.
 
-## Live Link - https://stock-trading-app-amber.vercel.app/
 This project was built to practice and strengthen real-world full stack development concepts.
 
 ---
